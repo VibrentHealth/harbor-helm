@@ -596,3 +596,30 @@ oidc:
   # clientSecret:
   # scope:
   # groups_claim:
+
+projects:
+- name: testproject01
+  groups:
+  - name: RE Team
+    role: 1
+  - name: devops
+    role: 3
+  - name: AWSDevOPS
+    role: 4
+- name: testproject02
+  groups:
+  - name: RE Team
+    role: 2
+  - name: devops
+    role: 4
+  - name: AWSDevOPS
+    role: 1
+- name: testproject03
+  groups:
+  - name: RE Team
+    role: 3
+  - name: devops
+    role: 4
+  - name: AWSDevOPS
+    role: 2
+

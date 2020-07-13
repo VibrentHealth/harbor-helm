@@ -1,0 +1,36 @@
+{{- range .Values.projects }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .name }}-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: {{ .name }}
+        image: harbor-helper:3.0
+        command:
+          - bash
+          - /tmp/harbor.sh
+        imagePullPolicy:  Never
+        env:
+        - name: PROEJCT_NAME
+          value: {{ .name }}
+        {{- range $index, $group := .groups }}
+        - name: AD-GRP-NAME-{{ $index }}
+          value: {{ $group.name }}
+        {{ end }}
+        volumeMounts:
+          - name: test-script
+            mountPath: /tmp/harbor.sh
+            subPath: harbor.sh
+      volumes:
+        - configMap:
+            defaultMode: 493
+            name: harbor-{{ .name}}
+          name: test-script
+      restartPolicy: Never
+  backoffLimit: 4
+{{- end -}}
+
