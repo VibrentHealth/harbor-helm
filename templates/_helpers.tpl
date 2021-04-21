@@ -102,14 +102,6 @@ app: "{{ template "harbor.name" . }}"
   {{- end -}}
 {{- end -}}
 
-{{- define "harbor.database.clairDatabase" -}}
-  {{- if eq .Values.database.type "internal" -}}
-    {{- printf "%s" "postgres" -}}
-  {{- else -}}
-    {{- .Values.database.external.clairDatabase -}}
-  {{- end -}}
-{{- end -}}
-
 {{- define "harbor.database.notaryServerDatabase" -}}
   {{- if eq .Values.database.type "internal" -}}
     {{- printf "%s" "notaryserver" -}}
@@ -134,6 +126,7 @@ app: "{{ template "harbor.name" . }}"
   {{- end -}}
 {{- end -}}
 
+<<<<<<< HEAD
 {{- define "harbor.database.clair" -}}
 {{- if eq .Values.database.type "external" }}
 {{- if and (hasKey .Values.database.external "clair") (hasKey .Values.database.external.clair "dbUrl") -}}
@@ -144,6 +137,8 @@ postgres://{{ template "harbor.database.username" . }}:{{ template "harbor.datab
 {{- end -}}
 {{- end -}}
 
+=======
+>>>>>>> v1.6.1
 {{- define "harbor.database.notaryServer" -}}
 {{- if eq .Values.database.type "external" }}
 {{- if and (hasKey .Values.database.external "notaryServer") (hasKey .Values.database.external.notaryServer "dbUrl") -}}
@@ -223,14 +218,6 @@ postgres://{{ template "harbor.database.username" . }}:{{ template "harbor.datab
 {{- end -}}
 
 /*scheme://[redis:password@]addr/db_index?idle_timeout_seconds=30*/
-{{- define "harbor.redis.urlForClair" -}}
-  {{- with .Values.redis }}
-    {{- $index := ternary "4" .external.clairAdapterIndex (eq .type "internal") }}
-    {{- printf "%s/%s?idle_timeout_seconds=30" (include "harbor.redis.url" $) $index -}}
-  {{- end }}
-{{- end -}}
-
-/*scheme://[redis:password@]addr/db_index?idle_timeout_seconds=30*/
 {{- define "harbor.redis.urlForTrivy" -}}
   {{- with .Values.redis }}
     {{- $index := ternary "5" .external.trivyAdapterIndex (eq .type "internal") }}
@@ -278,10 +265,6 @@ postgres://{{ template "harbor.database.username" . }}:{{ template "harbor.datab
   {{- printf "%s-database" (include "harbor.fullname" .) -}}
 {{- end -}}
 
-{{- define "harbor.clair" -}}
-  {{- printf "%s-clair" (include "harbor.fullname" .) -}}
-{{- end -}}
-
 {{- define "harbor.trivy" -}}
   {{- printf "%s-trivy" (include "harbor.fullname" .) -}}
 {{- end -}}
@@ -298,6 +281,10 @@ postgres://{{ template "harbor.database.username" . }}:{{ template "harbor.datab
   {{- printf "%s-nginx" (include "harbor.fullname" .) -}}
 {{- end -}}
 
+{{- define "harbor.exporter" -}}
+  {{- printf "%s-exporter" (include "harbor.fullname" .) -}}
+{{- end -}}
+
 {{- define "harbor.ingress" -}}
   {{- printf "%s-ingress" (include "harbor.fullname" .) -}}
 {{- end -}}
@@ -307,7 +294,7 @@ postgres://{{ template "harbor.database.username" . }}:{{ template "harbor.datab
 {{- end -}}
 
 {{- define "harbor.noProxy" -}}
-  {{- printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s" (include "harbor.core" .) (include "harbor.jobservice" .) (include "harbor.database" .) (include "harbor.chartmuseum" .) (include "harbor.clair" .) (include "harbor.notary-server" .) (include "harbor.notary-signer" .) (include "harbor.registry" .) (include "harbor.portal" .) (include "harbor.trivy" .) .Values.proxy.noProxy -}}
+  {{- printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s" (include "harbor.core" .) (include "harbor.jobservice" .) (include "harbor.database" .) (include "harbor.chartmuseum" .) (include "harbor.notary-server" .) (include "harbor.notary-signer" .) (include "harbor.registry" .) (include "harbor.portal" .) (include "harbor.trivy" .) (include "harbor.exporter" .) .Values.proxy.noProxy -}}
 {{- end -}}
 
 {{- define "harbor.caBundleVolume" -}}
@@ -346,24 +333,6 @@ postgres://{{ template "harbor.database.username" . }}:{{ template "harbor.datab
     {{- printf "443" -}}
   {{- else -}}
     {{- printf "80" -}}
-  {{- end -}}
-{{- end -}}
-
-{{/* clair adapter component container port */}}
-{{- define "harbor.clairAdapter.containerPort" -}}
-  {{- if .Values.internalTLS.enabled -}}
-    {{- printf "8443" -}}
-  {{- else -}}
-    {{- printf "8080" -}}
-  {{- end -}}
-{{- end -}}
-
-{{/* clair adapter component service port */}}
-{{- define "harbor.clairAdapter.servicePort" -}}
-  {{- if .Values.internalTLS.enabled -}}
-    {{- printf "8443" -}}
-  {{- else -}}
-    {{- printf "8080" -}}
   {{- end -}}
 {{- end -}}
 
@@ -475,11 +444,6 @@ postgres://{{ template "harbor.database.username" . }}:{{ template "harbor.datab
   {{- end -}}
 {{- end -}}
 
-{{/* CLAIR_ADAPTER_URL */}}
-{{- define "harbor.clairAdapterURL" -}}
-  {{- printf "%s://%s:%s" (include "harbor.component.scheme" .) (include "harbor.clair" .) (include "harbor.clairAdapter.servicePort" .) -}}
-{{- end -}}
-
 {{/* CORE_URL */}}
 {{/* port is included in this url as a workaround for issue https://github.com/aquasecurity/harbor-scanner-trivy/issues/108 */}}
 {{- define "harbor.coreURL" -}}
@@ -521,14 +485,6 @@ postgres://{{ template "harbor.database.username" . }}:{{ template "harbor.datab
     {{- .Values.internalTLS.chartmuseum.secretName -}}
   {{- else -}}
     {{- printf "%s-chartmuseum-internal-tls" (include "harbor.fullname" .) -}}
-  {{- end -}}
-{{- end -}}
-
-{{- define "harbor.internalTLS.clair.secretName" -}}
-  {{- if eq .Values.internalTLS.certSource "secret" -}}
-    {{- .Values.internalTLS.clair.secretName -}}
-  {{- else -}}
-    {{- printf "%s-clair-internal-tls" (include "harbor.fullname" .) -}}
   {{- end -}}
 {{- end -}}
 

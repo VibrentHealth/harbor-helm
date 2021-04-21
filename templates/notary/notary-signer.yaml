@@ -24,6 +24,7 @@ spec:
 {{- end }}
     spec:
       securityContext:
+        runAsUser: 10000
         fsGroup: 10000
       {{- if .Values.serviceAccount.enabled }}
       serviceAccountName: {{ include "harbor.serviceAccountName" . }}
@@ -32,6 +33,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      automountServiceAccountToken: false
       containers:
       - name: notary-signer
         image: {{ .Values.notary.signer.image.repository }}:{{ .Values.notary.signer.image.tag }}
@@ -74,15 +76,15 @@ spec:
           {{- else }}
           secretName: {{ template "harbor.notary-server" . }}
           {{- end }}
-    {{- with .Values.notary.nodeSelector }}
+    {{- with .Values.notary.signer.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}
     {{- end }}
-    {{- with .Values.notary.affinity }}
+    {{- with .Values.notary.signer.affinity }}
       affinity:
 {{ toYaml . | indent 8 }}
     {{- end }}
-    {{- with .Values.notary.tolerations }}
+    {{- with .Values.notary.signer.tolerations }}
       tolerations:
 {{ toYaml . | indent 8 }}
     {{- end }}
